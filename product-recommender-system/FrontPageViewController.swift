@@ -20,6 +20,8 @@ class FrontPageViewController: UIViewController, WKUIDelegate  {
     }
    
     @IBOutlet weak var product: UITextField!
+    @IBOutlet weak var price: UITextField!
+    
     
     
     
@@ -42,7 +44,7 @@ class FrontPageViewController: UIViewController, WKUIDelegate  {
         
         let search = product.text!
         
-        var requests = [URLRequest]()
+        var requests = [URLRequest : String]()
         
         let query = search.replacingOccurrences(of: " ", with: "")
         var contents: String?
@@ -60,26 +62,25 @@ class FrontPageViewController: UIViewController, WKUIDelegate  {
             
         
         
-        let tags = ["div", "span", "img", "a"]
         
         
         
-        requests.append(request_HarveyNorman)
-        requests.append(request_Argos)
-        requests.append(request_Currys)
-        requests.append(request_SoundStore)
-        requests.append(request_LittleWoods)
         
-        for var request in requests{
-            print(request)
-            request.httpMethod = "GET"
+        requests[request_HarveyNorman] = "form[method='post']" // FIX
+        //requests[request_Argos] = "div[class='skMob_productDetails']"
+        //requests[request_Currys] = "article[class='product result-prd']"
+        //requests[request_SoundStore] = "li[class='item product product-item']"
+        //requests[request_LittleWoods] = "div[class='productInfo']"
+        
+        for var (query, tag) in requests{
+            print(query)
+            query.httpMethod = "GET"
             let session = URLSession.init(configuration: URLSessionConfiguration.default)
-            session.dataTask(with: request) {data,response,error in
+            session.dataTask(with: query) {data,response,error in
                 if let data = data {
                     contents = String(data: data, encoding: .ascii)
-                    for tag in tags{
-                        self.findMatches(query: self.product.text!, document: contents!, tag: tag)
-                    }
+                    self.findMatches(query: self.product.text!, document: contents!, tag: tag)
+                    
                         
                 }
             }.resume()
@@ -97,21 +98,40 @@ class FrontPageViewController: UIViewController, WKUIDelegate  {
     
     
             
-    func findMatches(query:String ,document:String ,tag:String){
+    func findMatches(query:String ,document:String , tag:String){
         do{
             
             let doc: Document = try SwiftSoup.parse(document)
+            //print(try doc.html())
             let matches: Elements = try doc.select("" + tag + ":matches((?i)" + query + ")")
             
             let output: String = try matches.html()
-            print("Outputs")
             print(output)
+            self.findPrice(price: Double(price.text!)!, search: output)
+            
            }
            catch Exception.Error(let type, let message) {
                print("Error Message")
            } catch {
                
            }
+        
+        
+    }
+    
+    func findPrice(price: Double, search: String){
+        do{
+            let doc: Document = try SwiftSoup.parse(search)
+            
+            let matches: Elements = try doc.select("span[class='price-num']:matches(d{1,3}(?:[.,]d{3})*(?:[.,]d{2})) ")
+            print(try matches.html())
+        }
+        catch Exception.Error(let type, let message){
+            print("Error Message")
+        }catch{
+            
+        }
+        
         
         
     }

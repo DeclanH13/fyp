@@ -22,7 +22,7 @@ class FrontPageViewController: UIViewController, WKUIDelegate  {
     @IBOutlet weak var product: UITextField!
     @IBOutlet weak var price: UITextField!
     
-    
+   
     
     
     
@@ -104,10 +104,18 @@ class FrontPageViewController: UIViewController, WKUIDelegate  {
             let doc: Document = try SwiftSoup.parse(document)
             //print(try doc.html())
             let matches: Elements = try doc.select("" + tag + ":matches((?i)" + query + ")")
+            for match in matches.array(){
+                let priceSearch = try match.html()
+                if let price = Double(price.text!){
+                    if self.findPrice(price: price, search: priceSearch){
+                        print(match)
+                    }
+                }
+            }
             
             let output: String = try matches.html()
-            print(output)
-            self.findPrice(price: Double(price.text!)!, search: output)
+            //print(output)
+            //self.findPrice(price: Double(price.text!)!, search: output)
             
            }
            catch Exception.Error(let type, let message) {
@@ -119,25 +127,46 @@ class FrontPageViewController: UIViewController, WKUIDelegate  {
         
     }
     
-    func findPrice(price: Double, search: String){
+    func findPrice(price: Double, search: String) -> Bool{
         do{
             let doc: Document = try SwiftSoup.parse(search)
+            //print(doc)
             
-            let matches: Elements = try doc.select("span[class='price-num']:matches(d{1,3}(?:[.,]d{3})*(?:[.,]d{2})) ")
-            print(try matches.html())
+            let matches: Elements = try doc.select("span[class='price-num']:matches(\\d{1,3}(?:[.,]d{3})*(?:[.,]\\d{2})) ")
+            
+            
+            for match in matches.array(){
+                let foundPrice = convertFoundPricetoDouble(price: match.ownText())
+                if foundPrice <= price + (price * 0.10) &&  foundPrice >= price - (price * 0.10){
+                    print("MATCH FOUND")
+                    print(foundPrice)
+                    return true
+                }
+                return false
+                
+            }
+            
+            
         }
         catch Exception.Error(let type, let message){
             print("Error Message")
         }catch{
             
         }
-        
+        return false
         
         
     }
        
         
+    func convertFoundPricetoDouble(price: String) -> Double{
+        let numberFormatter = NumberFormatter()
+        numberFormatter.locale = Locale.current
+        numberFormatter.numberStyle = .decimal
+        return(numberFormatter.number(from: price) as! Double)
         
+        
+    }
         
     
     

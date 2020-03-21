@@ -1,32 +1,24 @@
 //
-//  WaitViewController.swift
+//  TestViewController.swift
 //  product-recommender-system
 //
-//  Created by Declan Holland on 28/01/2020.
+//  Created by Declan Holland on 20/03/2020.
 //  Copyright © 2020 Declan Holland. All rights reserved.
 //
 
 import UIKit
-
-class WaitViewController: UIViewController {
-
-    var errorCode:Int? = -1
-    
+import WebKit
+class TestViewController: UIViewController, WKUIDelegate{
+    let webView = WKWebView()
     override func viewDidLoad() {
         super.viewDidLoad()
-        
-        NotificationCenter.default.addObserver(self, selector: #selector(scrapeFinish(_:)), name: Notification.Name("FYP.scrapeFinished"), object: nil)
-        
-
-        
-        
+//        let url = URL(string: "http://www.google.com")!
+//        let request = URLRequest(url:url)
+        webView.frame = CGRect(x:0, y:0 ,width: 300, height:300)
+        webView.loadHTMLString("<h1>Test</h1>", baseURL: nil )
+        view.addSubview(webView)
+        // Do any additional setup after loading the view.
     }
-    
-    @objc func scrapeFinish(_ notification:Notification){
-        performSegue(withIdentifier: "showTableVC", sender: self)
-    }
-    
-   
     
 
     /*

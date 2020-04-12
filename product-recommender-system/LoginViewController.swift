@@ -26,7 +26,7 @@ class LoginViewController: UIViewController {
 
         // Do any additional setup after loading the view.
     }
-    
+    //Firebase Component 'Login'
     @IBAction func loginPressed(_ sender: Any) {
         Auth.auth().signIn(withEmail: emailAddress.text!, password: password.text!)
         {(user,error) in

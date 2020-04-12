@@ -31,7 +31,7 @@ class RegisterViewController: UIViewController {
         // Do any additional setup after loading the view.
     }
     
-
+  //Firebase Component 'Register'
     @IBAction func registerPressed(_ sender: Any) {
         if firstName.text == "" || lastName.text == ""{
             let alertController = UIAlertController(title: "Details not complete", message: "Please complete all text fields", preferredStyle: .alert)
@@ -55,9 +55,9 @@ class RegisterViewController: UIViewController {
                     
                     guard let uid = user?.user.uid else {return}
                     
-                    let userInfo = ["userId": uid, "email": self.emailAddress.text!, "firstName": self.firstName.text!, "lastName": self.lastName.text!]
+                    let userInfo = [ "email": self.emailAddress.text!, "firstName": self.firstName.text!, "lastName": self.lastName.text!]
                     
-                    Database.database().reference().child("users").updateChildValues(userInfo) { (error, ref) in
+                    Database.database().reference().child("Users").child(uid).setValue(userInfo) { (error, ref) in
                        
                     }
                     self.performSegue(withIdentifier: "doRegister", sender: self)

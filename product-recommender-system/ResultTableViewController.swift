@@ -14,9 +14,11 @@ class resultTableViewCell: UITableViewCell{
     @IBOutlet weak var productTitleLabel: UILabel!
     @IBOutlet weak var productPriceLabel: UILabel!
     @IBOutlet weak var productImage: UIImageView!
+
+    var jsonObject : [String:String]!
     
     
-    @IBOutlet weak var moreInfoButton: UIButton!
+    
 }
 
 
@@ -57,7 +59,13 @@ class ResultTableViewController:UITableViewController, WKUIDelegate , WKNavigati
         return matchResults.count
     }
 
-
+    override func tableView(_ tableView: UITableView, didSelectRowAt indexPath: IndexPath) {
+        let destinationVC = storyboard?.instantiateViewController(withIdentifier: "ProductInfoViewController") as? ProductInfoViewController
+        print(matchResults[indexPath.row])
+        destinationVC?.productJsonObject = matchResults[indexPath.row]
+        self.navigationController?.pushViewController(destinationVC!, animated: true)
+        
+    }
     
     override func tableView(_ tableView: UITableView, cellForRowAt indexPath: IndexPath) -> UITableViewCell {
         
@@ -76,52 +84,19 @@ class ResultTableViewController:UITableViewController, WKUIDelegate , WKNavigati
         }
         else{
             imageString = "https://" + imageString
-            print("here")
-            print(imageString)
             let imageURL = URL(string: imageString)!
             cell.productImage.downloadImage(url: imageURL)
         }
+//        print(imageString)
+        cell.jsonObject = matchResults[indexPath.row]
+        cell.jsonObject["image"] = imageString
+//        print("JSON OBJECT")
+       // print(cell.jsonObject["html"])
         return cell
     }
     
-    
-    
-    
-//    func tableView(tableView: UITableView, heightForRowAtIndexPath indexPath: IndexPath) -> CGFloat
-//    {
-//        return contentHeights[indexPath.row]
-//    }
-    
-    
-//
-//    func webView(_ webView: WKWebView, didFinish navigation: WKNavigation!) {
-//        webView.frame.size.height = 1
-//        webView.frame.size = webView.scrollView.contentSize
-//    }
-//    
-//    func webView(_ webView: WKWebView, didFinish navigation: WKNavigation!) {
-//        if (contentHeights[webView.tag] != 0.0)
-//               {
-//                   // we already know height, no need to reload cell
-//                   return
-//               }
-//                print("Here")
-//               contentHeights[webView.tag] = webView.scrollView.contentSize.height
-//               tableView.reloadRows(at: [(NSIndexPath(row: webView.tag, section: 0) as IndexPath)], with: .automatic)
-//    }
-//    
-    
-//    func webViewDidFinishLoad(webView: WKWebView)
-//    {
-//        if (contentHeights[webView.tag] != 0.0)
-//        {
-//            // we already know height, no need to reload cell
-//            return
-//        }
-//
-//        contentHeights[webView.tag] = webView.scrollView.contentSize.height
-//        tableView.reloadRows(at: [(NSIndexPath(row: webView.tag, section: 0) as IndexPath)], with: .automatic)
-//    }
+   
+
 
     /*
     // Override to support conditional editing of the table view.

@@ -15,7 +15,7 @@ import SwiftSoup
 
 
 @UIApplicationMain
-class AppDelegate: UIResponder, UIApplicationDelegate {
+class AppDelegate: UIResponder, UIApplicationDelegate{
 
     var results = [[String:String]]()
     

@@ -64,13 +64,15 @@ class FrontPageViewController: UIViewController, WKUIDelegate  {
     
     let dispatchGroup = DispatchGroup()
     
+    
+    // WebScraper Component
     @IBAction func scrape(_ sender: Any) {
         resultMatches = []
         let search = product.text!
         
         var requests : [URLRequest ] = []
         
-        let query = search.replacingOccurrences(of: " ", with: "")
+        let query = search.replacingOccurrences(of: " ", with: "_")
         var contents: String?
         //CLEAN EVERYTHING BELOW THIS
         
@@ -78,11 +80,13 @@ class FrontPageViewController: UIViewController, WKUIDelegate  {
        
     
         let request_SoundStore = URLRequest(url: URL(string: "https://www.soundstore.ie/catalogsearch/result/?q=" + query)!)
-    
-        let request_HarveyNorman = URLRequest(url: URL(string: "https://www.harveynorman.ie/index.php?subcats=Y&status=A&pshort=N&pfull=N&pname=Y&pkeywords=Y&search_performed=Y&q=" + query + "&dispatch=products.search")!)
-              
-        let request_Currys = URLRequest(url: URL(string: "https://www.currys.ie/ieen/search-keywords/xx_xx_xx_xx_xx/" + query + "/xx-criteria.html")!)
-               
+        
+        let request_HarveyNorman = URLRequest(url: URL(string: "https://www.harveynorman.ie/index.php?subcats=Y&status=A&pshort=N&pfull=N&pname=Y&pkeywords=Y&search_performed=Y&q=" + query +
+            "&dispatch=products.search")!)
+        
+        let request_Currys = URLRequest(url: URL(string: "https://www.currys.ie/ieen/search-keywords/xx_xx_xx_xx_xx/" + query
+            + "/xx-criteria.html")!)
+        
         let request_Argos = URLRequest(url: URL(string:"https://www.argos.ie/webapp/wcs/stores/servlet/Search?storeId=10152&catalogId=15051&langId=111&searchTerms=" + query + "&authToken=-1002%252CTb6zd56kFOpztp1WPmC9rktuDxQ%253D")!)
             
         
@@ -149,6 +153,8 @@ class FrontPageViewController: UIViewController, WKUIDelegate  {
         }
         print("Sleep")
         sleep(1)
+        
+        
         dispatchGroup.notify(queue: .main) {
             print("FINISHED")
             self.moveToTableVC()
@@ -156,9 +162,6 @@ class FrontPageViewController: UIViewController, WKUIDelegate  {
         
         }
             
-    
-    
-    
     
     
     func moveToTableVC(){
@@ -173,6 +176,13 @@ class FrontPageViewController: UIViewController, WKUIDelegate  {
         
     }
     
+    
+    @IBAction func viewBookmarks(_ sender: Any) {
+        let destinationVC = storyboard?.instantiateViewController(identifier: "BookmarkTableViewController") as? BookmarkTableViewController
+        self.navigationController?.pushViewController(destinationVC!, animated: true)
+    }
+    
+    
             
     func findMatches(query:String ,document:String , tag:String , priceRegex: String, productRegex:String ,imgSRC:String){
         self.dispatchGroup.enter()
@@ -180,7 +190,8 @@ class FrontPageViewController: UIViewController, WKUIDelegate  {
             "product": "",
             "price": "",
             "image": "",
-            "html": ""
+            "html": "",
+            "store": ""
         
         
         
@@ -188,7 +199,7 @@ class FrontPageViewController: UIViewController, WKUIDelegate  {
         do{
             
             let doc: Document = try SwiftSoup.parse(document)
-           // print(try doc.html())
+            //print(try doc.html())
             let matches: Elements = try doc.select("" + tag + ":matches((?i)" + query + ")")
         
             for match in matches.array(){
@@ -201,10 +212,25 @@ class FrontPageViewController: UIViewController, WKUIDelegate  {
                         //GET PRODUCT NAME FOR JSON OBJECT
                         let productMatch: Document = try SwiftSoup.parse(priceSearch)
                         let productName = try productMatch.select("" + productRegex + ":matches(.)")
-//                        print("JSON PRODUCTNAME")
-//                        print(try productName.text())
-//                        print(priceSearch)
+                        
                         JsonObject["product"] = try productName.text()
+//                        let productHarveyNorman = "a[class='product-title']"
+//                        let productCurrys = "header[class='productTitle']"
+//                        let productArgos = "div[class='skMob_productTitle skgridview']"
+//                        let productSoundstore = "a[class='product-item-link']"
+                        if productRegex == "a[class='product-title']"{
+                            JsonObject["store"] = "Harvey Norman"
+                        }
+                        else if productRegex == "header[class='productTitle']"{
+                            JsonObject["store"] = "Currys"
+                        }
+                        else if productRegex == "div[class='skMob_productTitle skgridview']"{
+                            JsonObject["store"] = "Argos"
+                        }
+                        else if productRegex == "a[class='product-item-link']"{
+                            JsonObject["store"] = "Soundstore"
+                        }
+                
                         //GET IMG SRC FOR JSON OBJECT
                         let imgMatch: Document = try SwiftSoup.parse(priceSearch)
                         let imgResult = try imgMatch.select("" + imgSRC  )
@@ -231,6 +257,7 @@ class FrontPageViewController: UIViewController, WKUIDelegate  {
                         }
                         
                         
+                        
 //                        let imgHarveyNorman = "img[src]"
 //                           let imgArgos = "img[data-original]"
 //                           let imgCurrys = "picture[data-ierc]"
@@ -239,7 +266,7 @@ class FrontPageViewController: UIViewController, WKUIDelegate  {
                         resultMatches.append(JsonObject)
 //                        print("BREAK POINT")
 //                        print(priceSearch)
-                          print(resultMatches.count)
+                        //  print(resultMatches.count)
                         
                     }
                 }
@@ -281,7 +308,7 @@ class FrontPageViewController: UIViewController, WKUIDelegate  {
                 let foundPrice = convertFoundPricetoDouble(price: decodedString)
 //                print("NEW PRICE ")
 //                print(foundPrice)
-                if foundPrice <= price + (price * 0.10) &&  foundPrice >= price - (price * 0.10){
+                if foundPrice <= price + (price * 0.10) /*&&  foundPrice >= price - (price * 0.10)*/{
 //                    print("JSON PRICE")
 
 //                    print(foundPrice)

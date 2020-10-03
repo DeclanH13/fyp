@@ -7,6 +7,7 @@
 //
 
 import UIKit
+import Firebase
 import FirebaseAuth
 import SwiftSoup
 import WebKit
@@ -14,7 +15,7 @@ import WebKit
 class FrontPageViewController: UIViewController, WKUIDelegate  {
     var webView: WKWebView!
     var resultMatches  = [[String:String]]()
-    
+     var JSONObjects = [[String:String]]()
     
 //    var JsonObject :[String:String] = [
 //        "product": "",
@@ -73,6 +74,7 @@ class FrontPageViewController: UIViewController, WKUIDelegate  {
         var requests : [URLRequest ] = []
         
         let query = search.replacingOccurrences(of: " ", with: "_")
+     
         var contents: String?
         //CLEAN EVERYTHING BELOW THIS
         
@@ -157,7 +159,15 @@ class FrontPageViewController: UIViewController, WKUIDelegate  {
         
         dispatchGroup.notify(queue: .main) {
             print("FINISHED")
+            if self.resultMatches.count == 0{
+                let alertController = UIAlertController(title: "Error", message: "No Matches found", preferredStyle: .alert)
+                let defaultAction = UIAlertAction(title: "OK", style: .cancel, handler: nil)
+                alertController.addAction(defaultAction)
+                self.present(alertController, animated: true, completion: nil)
+            }
+            else{
             self.moveToTableVC()
+            }
         }
         
         }
@@ -176,12 +186,64 @@ class FrontPageViewController: UIViewController, WKUIDelegate  {
         
     }
     
-    
     @IBAction func viewBookmarks(_ sender: Any) {
-        let destinationVC = storyboard?.instantiateViewController(identifier: "BookmarkTableViewController") as? BookmarkTableViewController
-        self.navigationController?.pushViewController(destinationVC!, animated: true)
+          var object :[String:String] = [
+                     "product": "",
+                     "price": "",
+                     "link": "",
+                     "store": ""
+                 
+                 
+                 
+                 ]
+        
+             
+                guard let uid = Auth.auth().currentUser?.uid else { return }
+                let db = Firestore.firestore()
+                dispatchGroup.enter()
+                db.collection("Users").document(uid as! String).collection("Bookmarks").getDocuments(){
+                    (querySnapshot, err) in
+        
+                    if let err = err {
+                        print("Error getting documents: \(err)")
+                    } else {
+                        self.dispatchGroup.enter()
+                        for document in querySnapshot!.documents {
+                            
+                            
+                               object["link"] = document.data()["link"] as! String
+                               object["store"] = document.data()["store"] as! String
+                               object["product"] = document.data()["product"] as! String
+                               object["price"] = document.data()["price"] as! String
+                            
+                           // print(object)
+                            self.JSONObjects.append(object)
+                            //print("Data")
+                            print(self.JSONObjects)
+                           
+                        }
+                        self.dispatchGroup.enter()
+                    }
+                }
+                dispatchGroup.leave()
+        print("sleep")
+        sleep(2)
+        dispatchGroup.notify(queue: .main) {
+                   print("FINISHED")
+            self.moveToBookmarkVC(object: self.JSONObjects)
+               
+      
+        }
     }
     
+    func moveToBookmarkVC(object: [[String:String]]){
+        let destinationVC = storyboard?.instantiateViewController(identifier: "BookmarkTableViewController") as? BookmarkTableViewController
+        print("Here")
+        print(object.capacity)
+        destinationVC?.tableInfo = object
+        self.navigationController?.pushViewController(destinationVC!, animated: true)
+        
+    }
     
             
     func findMatches(query:String ,document:String , tag:String , priceRegex: String, productRegex:String ,imgSRC:String){
@@ -202,7 +264,8 @@ class FrontPageViewController: UIViewController, WKUIDelegate  {
             //print(try doc.html())
             let matches: Elements = try doc.select("" + tag + ":matches((?i)" + query + ")")
         
-            for match in matches.array(){
+            for match in matches.array()
+            {
                 let priceSearch = try match.html()
                 
                 if let price = Double(price.text!){
@@ -255,9 +318,6 @@ class FrontPageViewController: UIViewController, WKUIDelegate  {
                             }
                             
                         }
-                        
-                        
-                        
 //                        let imgHarveyNorman = "img[src]"
 //                           let imgArgos = "img[data-original]"
 //                           let imgCurrys = "picture[data-ierc]"

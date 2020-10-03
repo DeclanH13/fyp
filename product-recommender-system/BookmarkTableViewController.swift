@@ -16,6 +16,7 @@ class bookmarkTableViewCell: UITableViewCell{
     @IBOutlet weak var productName: UILabel!
     @IBOutlet weak var productPrice: UILabel!
     @IBOutlet weak var storeName: UILabel!
+    @IBOutlet weak var storeWebsite: UILabel!
     
     
     
@@ -25,24 +26,39 @@ class bookmarkTableViewCell: UITableViewCell{
 
 class BookmarkTableViewController: UITableViewController {
     var databaseInfo: NSDictionary!
-    var tableInfo = [[Any]]()
+    var tableInfo = [[String:String]]()
+    
+    
+    let dispatchGroup = DispatchGroup()
     override func viewDidLoad() {super.viewDidLoad()
         var listItems = [Any]()
+       var JSONObjects = [[String:String]]()
         guard let uid = Auth.auth().currentUser?.uid else { return }
-        Database.database().reference().child("Users").child(uid).child("Bookmarks").observeSingleEvent(of: .value, with: { (snapshot) in
-          // Get user value
-            let dict = snapshot.value as! NSDictionary
-            for(key, value) in dict{
-                print(value)
-                listItems.append(value)
+        let db = Firestore.firestore()
+        db.collection("Users").document(uid as! String).collection("Bookmarks").getDocuments(){
+            (querySnapshot, err) in
+
+            if let err = err {
+                print("Error getting documents: \(err)")
+            } else {
+                for document in querySnapshot!.documents {
+                    
+                    let object = [
+                        "link": document.data()["link"] as! String,
+                        "store": document.data()["store"] as! String,
+                        "product": document.data()["product"] as! String,
+                        "price": document.data()["price"] as! String
+                    ]
+                    self.tableInfo.append(object)
+                }
             }
-            
-          }) { (error) in
-            print(error.localizedDescription)
+             self.tableView.reloadData()
         }
-        print("HERE")
-        print(listItems)
-        print(tableInfo)
+       
+        
+     
+        
+       
         }
 
         // Uncomment the following line to preserve selection between presentations
@@ -56,10 +72,9 @@ class BookmarkTableViewController: UITableViewController {
 
     
     
-    
     override func tableView(_ tableView: UITableView, didSelectRowAt indexPath: IndexPath) {
            let destinationVC = storyboard?.instantiateViewController(identifier: "WebsiteViewController") as? WebsiteViewController
-        
+            destinationVC?.html = tableInfo[indexPath.row]["link"]
            self.navigationController?.pushViewController(destinationVC!, animated: true)
            
        }
@@ -79,7 +94,9 @@ class BookmarkTableViewController: UITableViewController {
     
     override func tableView(_ tableView: UITableView, cellForRowAt indexPath: IndexPath) -> UITableViewCell {
         let cell = tableView.dequeueReusableCell(withIdentifier: "cell", for: indexPath) as! bookmarkTableViewCell
-     
+        cell.productName.text = tableInfo[indexPath.row]["product"]
+        cell.productPrice.text = tableInfo[indexPath.row]["price"]
+        cell.storeName.text = tableInfo[indexPath.row]["store"]
 
         return cell
     }
@@ -131,3 +148,4 @@ class BookmarkTableViewController: UITableViewController {
     */
 
 }
+

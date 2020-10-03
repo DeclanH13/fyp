@@ -80,7 +80,9 @@ class ProductInfoViewController: UIViewController {
          print(uid)
         
         let productObject = ["product": productJsonObject["product"]!, "price" : productJsonObject["price"]!, "link": storeWebsiteLink!, "store": productJsonObject["store"]!]
-        Database.database().reference().child("Users").child(uid).child("Bookmarks").child(productObject["product"]!).setValue(productObject)
+        //Database.database().reference().child("Users").child(uid).child("Bookmarks").child(productObject["product"]!).setValue(productObject)
+        let db = Firestore.firestore()
+        db.collection("Users").document(uid as! String).collection("Bookmarks").addDocument(data: productObject)
         let alertController = UIAlertController(title: "Product Bookmarked!", message: "This product has been bookmarked for you to revisit later", preferredStyle: .alert)
         let defaultAction = UIAlertAction(title: "OK", style: .cancel, handler: nil)
         alertController.addAction(defaultAction)

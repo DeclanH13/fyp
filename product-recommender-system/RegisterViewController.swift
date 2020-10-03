@@ -56,10 +56,12 @@ class RegisterViewController: UIViewController {
                     guard let uid = user?.user.uid else {return}
                     
                     let userInfo = [ "email": self.emailAddress.text!, "firstName": self.firstName.text!, "lastName": self.lastName.text!]
-                    
-                    Database.database().reference().child("Users").child(uid).setValue(userInfo) { (error, ref) in
+                    let db = Firestore.firestore()
+                    db.collection("Users").document(uid as! String).setData(userInfo)
+                   
+                    //Database.database().reference().child("Users").child(uid).setValue(userInfo) { (error, ref) in
                        
-                    }
+                   // }
                     self.performSegue(withIdentifier: "doRegister", sender: self)
                 }
                 else{
